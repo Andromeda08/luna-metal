@@ -12,11 +12,11 @@ add_executable(MetalExample
     src/main.cpp
     src/metal_cpp_impl.cpp
     src/MetalRHI.hpp
+    src/MetalRHI.cpp
     src/IWindow.h
     src/Window.h
-    src/Window.mm
     src/Window.cpp
-    src/MetalRHI.cpp
+    src/Window.mm
 )
 
 target_link_libraries(MetalExample PUBLIC
