@@ -11,8 +11,9 @@ Dependencies should be extracted and placed under the `external` directory.
 
 1. Download `metal-cpp_macOS26_iOS26-beta2` from the [Apple Developer website](https://developer.apple.com/metal/cpp/files/metal-cpp_macOS26_iOS26-beta2.zip).
    - Generate the `<metal/metal.hpp>` single header using the Python script.
-    ```shell
-    py ./SingleHeader/MakeSingleHeader.py -o SingleHeader/metal/metal.hpp Foundation/Foundation.hpp QuartzCore/QuartzCore.hpp Metal/Metal.hpp MetalFX/MetalFX.hpp
-    ```
+   ```shell
+   cd external/metal-cpp 
+   ./SingleHeader/MakeSingleHeader.py -o SingleHeader/metal/metal.hpp Foundation/Foundation.hpp QuartzCore/QuartzCore.hpp Metal/Metal.hpp MetalFX/MetalFX.hpp
+   ```
 
 2. Download the lastest version of `GLFW` from [GitHub](https://github.com/glfw/glfw).
