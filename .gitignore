@@ -1,4 +1,6 @@
-cmake-build-debug
-external/glfw
-external/metal-cpp
 .idea
+
+cmake-build-debug
+cmake-build-release
+
+external/metal-cpp

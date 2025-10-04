@@ -9,11 +9,6 @@ This project is a minimal C++ 23 example for using **Metal 4** with GLFW in a CM
 
 Dependencies should be extracted and placed under the `external` directory.
 
-1. Download `metal-cpp_macOS26_iOS26-beta2` from the [Apple Developer website](https://developer.apple.com/metal/cpp/files/metal-cpp_macOS26_iOS26-beta2.zip).
-   - Generate the `<metal/metal.hpp>` single header using the Python script.
-   ```shell
-   cd external/metal-cpp 
-   ./SingleHeader/MakeSingleHeader.py -o SingleHeader/metal/metal.hpp Foundation/Foundation.hpp QuartzCore/QuartzCore.hpp Metal/Metal.hpp MetalFX/MetalFX.hpp
-   ```
+1. The [fetchMetalCpp](cmake/fetchMetalCpp.cmake) script downloads, extracts the used metal-cpp version and runs the python command to generate the single `<metal/metal.hpp>` header file.
 
-2. Download the lastest version of `GLFW` from [GitHub](https://github.com/glfw/glfw).
+2. [GLFW](https://github.com/glfw/glfw) is downloaded as a git submodule.
