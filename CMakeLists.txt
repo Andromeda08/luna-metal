@@ -6,6 +6,8 @@ enable_language(OBJCXX)
 set(CMAKE_OSX_ARCHITECTURES "arm64")
 set(CMAKE_CXX_STANDARD 23)
 
+include(cmake/fetchMetalCpp.cmake)
+
 add_subdirectory(external/glfw)
 
 add_executable(MetalExample
