@@ -4,7 +4,7 @@ set(METAL_CPP_DIR ${PROJECT_SOURCE_DIR}/external/metal-cpp)
 if (NOT EXISTS ${METAL_CPP_DIR})
     file(
         DOWNLOAD
-        https://developer.apple.com/metal/cpp/files/metal-cpp_macOS26_iOS26-beta2.zip
+        https://developer.apple.com/metal/cpp/files/metal-cpp_26.zip
         ${CMAKE_CURRENT_BINARY_DIR}/metal-cpp.zip
         SHOW_PROGRESS
         STATUS DOWNLOAD_STATUS
