@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <map>
 #include <memory>
 #include <string>
 
@@ -105,6 +106,100 @@ private:
 #pragma endregion
 
 // ============================
+// Metal Pipeline
+// ============================
+enum class ShaderType
+{
+    Vertex,
+    Fragment,
+};
+
+struct MTLPipelineParams
+{
+    NSPtr<MTL::Device> pDevice;
+};
+
+class MTLPipeline
+{
+public:
+    class Builder
+    {
+    public:
+        Builder() = default;
+        explicit Builder(const MTLPipelineParams& params) : mParams(params) {}
+
+        Builder& addShaderSource(const std::string& shaderSourceCode)
+        {
+            mSource = NS::TransferPtr(NS::String::alloc()->init(shaderSourceCode.c_str(), NS::UTF8StringEncoding));
+            return *this;
+        }
+
+        Builder& setShaderEntryPoint(const ShaderType shaderType, const std::string& entryPoint)
+        {
+            mShaderEntryPointNames[shaderType] = NS::TransferPtr(
+                NS::String::alloc()->init(entryPoint.c_str(), NS::UTF8StringEncoding));
+            return *this;
+        }
+
+        Builder& addColorAttachment(const MTL::PixelFormat format, const MTL4::BlendState blendState = MTL4::BlendStateDisabled)
+        {
+            auto attachment = NS::TransferPtr(MTL4::RenderPipelineColorAttachmentDescriptor::alloc()->init());
+            attachment->setPixelFormat(format);
+            attachment->setBlendingState(blendState);
+
+            mColorAttachments.push_back(attachment);
+            return *this;
+        }
+
+        Builder& setName(const std::string& name)
+        {
+            mName = name;
+            return *this;
+        }
+
+        [[nodiscard]] UPtr<MTLPipeline> create() const
+        {
+            return MTLPipeline::createFromBuilder(mParams, *this);
+        }
+
+    private:
+        friend class MTLPipeline;
+
+        // RHI Params
+        MTLPipelineParams mParams;
+        // Shader Data
+        NSPtr<NS::String>                        mSource;
+        std::map<ShaderType, NSPtr<NS::String>>  mShaderEntryPointNames;
+        // Attachment Data
+        std::vector<NSPtr<MTL4::RenderPipelineColorAttachmentDescriptor>> mColorAttachments;
+        // Meta
+        std::string mName;
+    };
+
+    explicit MTLPipeline(const MTLPipelineParams& params) : mDevice(params.pDevice) {}
+
+    void bind(MTL4::RenderCommandEncoder* pEncoder) const
+    {
+        pEncoder->setRenderPipelineState(mPipelineState.get());
+    }
+
+private:
+    [[nodiscard]] static UPtr<MTLPipeline> createFromBuilder(const MTLPipelineParams& params, const Builder& builder);
+
+    void createShaderLibrary(const NS::String* pShaderSource);
+
+    void createPipeline();
+
+    std::vector<NSPtr<MTL4::RenderPipelineColorAttachmentDescriptor>> mColorAttachments;
+    std::map<ShaderType, NSPtr<NS::String>>                           mShaderEntryPointNames;
+    std::map<ShaderType, NSPtr<MTL4::LibraryFunctionDescriptor>>      mShaderDescriptors;
+    NSPtr<MTL::Library>                                               mLibrary;
+    NSPtr<MTL::RenderPipelineState>                                   mPipelineState;
+    NSPtr<MTL::Device>                                                mDevice;
+    std::string                                                       mName;
+};
+
+// ============================
 // Metal RenderPass Utility
 // ============================
 struct MTLRenderPass
@@ -143,9 +238,14 @@ public:
 
     void renderFrame();
 
-private:
-    void createPipeline();
+    MTLPipeline::Builder buildPipeline() const
+    {
+        return MTLPipeline::Builder({
+            .pDevice = mDevice,
+        });
+    }
 
+private:
     IWindow*                                     mWindow = nullptr;
 
     NSPtr<MTL::Device>                           mDevice;
@@ -160,6 +260,5 @@ private:
     NSPtr<MTL::SharedEvent>                      mSharedEvent;
 
     MTLRenderPass                                mRenderPass;
-    NSPtr<MTL::Library>                          mLibrary;
-    NSPtr<MTL::RenderPipelineState>              mPipelineState;
+    UPtr<MTLPipeline>                            mPipeline;
 };

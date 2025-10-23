@@ -1,5 +1,5 @@
-#include "MetalRHI.hpp"
-#include "Window.h"
+#include "MetalRHI/MetalRHI.hpp"
+#include "Window/Window.h"
 
 int main()
 {

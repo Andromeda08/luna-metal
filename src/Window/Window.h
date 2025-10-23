@@ -3,7 +3,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-#include "IWindow.h"
+#include "MetalRHI/IWindow.h"
 
 class Window final : public IWindow
 {

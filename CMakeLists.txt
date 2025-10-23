@@ -12,13 +12,13 @@ add_subdirectory(external/glfw)
 
 add_executable(MetalExample
     src/main.cpp
-    src/metal_cpp_impl.cpp
-    src/MetalRHI.hpp
-    src/MetalRHI.cpp
-    src/IWindow.h
-    src/Window.h
-    src/Window.cpp
-    src/Window.mm
+        src/MetalRHI/metal_cpp_impl.cpp
+        src/MetalRHI/MetalRHI.hpp
+        src/MetalRHI/MetalRHI.cpp
+        src/MetalRHI/IWindow.h
+        src/Window/Window.h
+        src/Window/Window.cpp
+        src/Window/Window.mm
 )
 
 target_link_libraries(MetalExample PUBLIC

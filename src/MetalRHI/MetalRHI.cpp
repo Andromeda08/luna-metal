@@ -1,5 +1,6 @@
 #include "MetalRHI.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <format>
 #include <print>
@@ -98,6 +99,81 @@ NSPtr<MTL4::RenderCommandEncoder> MTLRenderPass::renderCommandEncoder(MTL4::Comm
 
 #pragma endregion
 
+#pragma region "MTLPipeline"
+
+UPtr<MTLPipeline> MTLPipeline::createFromBuilder(const MTLPipelineParams& params, const Builder& builder)
+{
+    auto pipeline = std::make_unique<MTLPipeline>(params);
+
+    pipeline->mShaderEntryPointNames = builder.mShaderEntryPointNames;
+    pipeline->mColorAttachments      = builder.mColorAttachments;
+    pipeline->mName                  = builder.mName;
+
+    pipeline->createShaderLibrary(builder.mSource.get());
+    pipeline->createPipeline();
+
+    return pipeline;
+}
+
+void MTLPipeline::createShaderLibrary(const NS::String* pShaderSource)
+{
+    NS::Error* error = nullptr;
+
+    auto* compileOptions = MTL::CompileOptions::alloc()->init();
+    mLibrary = NS::TransferPtr(mDevice->newLibrary(pShaderSource, compileOptions, &error));
+    compileOptions->release();
+
+    assert(mLibrary.get());
+
+    for (const auto& [shaderType, entryPoint] : mShaderEntryPointNames)
+    {
+        auto* pDescriptor = MTL4::LibraryFunctionDescriptor::alloc()->init();
+        pDescriptor->setLibrary(mLibrary.get());
+        pDescriptor->setName(entryPoint.get());
+        mShaderDescriptors[shaderType] = NS::TransferPtr(pDescriptor);
+    }
+}
+
+void MTLPipeline::createPipeline()
+{
+    auto* pipelineDescriptor = MTL4::RenderPipelineDescriptor::alloc()->init();
+    for (const auto& [shaderType, descriptor] : mShaderDescriptors)
+    {
+        using enum ShaderType;
+        switch (shaderType)
+        {
+        case Vertex:
+            pipelineDescriptor->setVertexFunctionDescriptor(descriptor.get());
+            break;
+        case Fragment:
+            pipelineDescriptor->setFragmentFunctionDescriptor(descriptor.get());
+            break;
+        default:
+            assert(false);
+        }
+    }
+    for (const auto& attachment : mColorAttachments)
+    {
+        const auto i = static_cast<NS::UInteger>(std::distance(
+            std::begin(mColorAttachments),
+            std::ranges::find(mColorAttachments, attachment)));
+        pipelineDescriptor->colorAttachments()->setObject(attachment.get(), i);
+    }
+
+    NS::Error* error = nullptr;
+    auto* compilerDescriptor = MTL4::CompilerDescriptor::alloc()->init();
+    auto* compiler = mDevice->newCompiler(compilerDescriptor, &error);
+
+    auto* compilerOptions = MTL4::CompilerTaskOptions::alloc()->init();
+    mPipelineState = NS::TransferPtr(compiler->newRenderPipelineState(pipelineDescriptor, compilerOptions, &error));
+
+    compilerOptions->release();
+    compiler->release();
+    compilerDescriptor->release();
+}
+
+#pragma endregion
+
 MetalRHI::MetalRHI(const MetalRHIParams& params): mWindow(params.pWindow)
 {
     mDevice = NS::TransferPtr(MTL::CreateSystemDefaultDevice());
@@ -122,7 +198,13 @@ MetalRHI::MetalRHI(const MetalRHIParams& params): mWindow(params.pWindow)
 
     mRenderPass = MTLRenderPass().init();
 
-    createPipeline();
+    mPipeline = MTLPipeline::Builder({ mDevice })
+        .addShaderSource(gFullscreenQuadShader)
+        .setShaderEntryPoint(ShaderType::Vertex, "vertex_main")
+        .setShaderEntryPoint(ShaderType::Fragment, "fragment_main")
+        .addColorAttachment(mMetalLayer->pixelFormat())
+        .setName("FullscreenQuadPipeline")
+        .create();
 }
 
 UPtr<MetalRHI> MetalRHI::create(const MetalRHIParams& params)
@@ -159,7 +241,7 @@ void MetalRHI::renderFrame()
     const NS::SharedPtr<MTL4::RenderCommandEncoder> renderCommandEncoder = mRenderPass.renderCommandEncoder(mCommandBuffer.get());
     {
         renderCommandEncoder->setViewport(viewport);
-        renderCommandEncoder->setRenderPipelineState(mPipelineState.get());
+        mPipeline->bind(renderCommandEncoder.get());
         renderCommandEncoder->drawPrimitives(MTL::PrimitiveTypeTriangle, 0, 3);
     }
     renderCommandEncoder->endEncoding();
@@ -175,39 +257,4 @@ void MetalRHI::renderFrame()
     metalDrawable->present();
 
     mCommandQueue->signalEvent(mSharedEvent.get(), mFrameNumber);
-}
-
-void MetalRHI::createPipeline()
-{
-    auto* compileOptions = MTL::CompileOptions::alloc()->init();
-    NS::String* source = NS::String::alloc()->init(gFullscreenQuadShader, NS::UTF8StringEncoding);
-
-    NS::Error* error = nullptr;
-    mLibrary = NS::TransferPtr(mDevice->newLibrary(source, compileOptions, &error));
-
-    compileOptions->release();
-    assert(mLibrary.get());
-
-    auto* vtx = MTL4::LibraryFunctionDescriptor::alloc()->init();
-    vtx->setLibrary(mLibrary.get());
-    vtx->setName(MTLSTR("vertex_main"));
-
-    auto* frg = MTL4::LibraryFunctionDescriptor::alloc()->init();
-    frg->setLibrary(mLibrary.get());
-    frg->setName(MTLSTR("fragment_main"));
-
-    auto* attachment = MTL4::RenderPipelineColorAttachmentDescriptor::alloc()->init();
-    attachment->setPixelFormat(mMetalLayer->pixelFormat());
-    attachment->setBlendingState(MTL4::BlendStateDisabled);
-
-    auto* pipelineDescriptor = MTL4::RenderPipelineDescriptor::alloc()->init();
-    pipelineDescriptor->setVertexFunctionDescriptor(vtx);
-    pipelineDescriptor->setFragmentFunctionDescriptor(frg);
-    pipelineDescriptor->colorAttachments()->setObject(attachment, 0);
-
-    auto* compilerDescriptor = MTL4::CompilerDescriptor::alloc()->init();
-    auto* compiler = mDevice->newCompiler(compilerDescriptor, &error);
-
-    auto* compilerOptions = MTL4::CompilerTaskOptions::alloc()->init();
-    mPipelineState = NS::TransferPtr(compiler->newRenderPipelineState(pipelineDescriptor, compilerOptions, &error));
 }

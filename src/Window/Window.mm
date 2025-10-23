@@ -3,7 +3,7 @@
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3native.h>
 
-#include "MetalRHI.hpp"
+#include "MetalRHI/MetalRHI.hpp"
 
 CA::MetalLayer* Window::createMetalLayer(MTL::Device* pDevice) const
 {
