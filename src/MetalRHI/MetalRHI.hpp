@@ -88,11 +88,11 @@ public:
 
     static UPtr<MetalTexture> create(const MetalTextureParams& params);
 
-    MTL::Texture* getHandle() const;
+    [[nodiscard]] MTL::Texture* getHandle() const;
 
-    MTL::PixelFormat getFormat() const;
+    [[nodiscard]] MTL::PixelFormat getFormat() const;
 
-    Size2D getSize() const;
+    [[nodiscard]] Size2D getSize() const;
 
 private:
     const Size2D            mSize;
