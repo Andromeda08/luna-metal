@@ -214,6 +214,20 @@ UPtr<MetalRHI> MetalRHI::create(const MetalRHIParams& params)
 
 void MetalRHI::renderFrame()
 {
+    renderFrame([&](auto* commandBuffer, const auto& viewport, const auto currentFrame) -> void
+    {
+        const NS::SharedPtr<MTL4::RenderCommandEncoder> renderCommandEncoder = mRenderPass.renderCommandEncoder(commandBuffer);
+        {
+            renderCommandEncoder->setViewport(viewport);
+            mPipeline->bind(renderCommandEncoder.get());
+            renderCommandEncoder->drawPrimitives(MTL::PrimitiveTypeTriangle, 0, 3);
+        }
+        renderCommandEncoder->endEncoding();
+    });
+}
+
+void MetalRHI::renderFrame(const RenderFrameBodyFn& fn)
+{
     mFrameNumber += 1;
 
     if (mFrameNumber >= gFramesInFlight)
@@ -238,13 +252,7 @@ void MetalRHI::renderFrame()
         .zfar    = 1.0,
     };
 
-    const NS::SharedPtr<MTL4::RenderCommandEncoder> renderCommandEncoder = mRenderPass.renderCommandEncoder(mCommandBuffer.get());
-    {
-        renderCommandEncoder->setViewport(viewport);
-        mPipeline->bind(renderCommandEncoder.get());
-        renderCommandEncoder->drawPrimitives(MTL::PrimitiveTypeTriangle, 0, 3);
-    }
-    renderCommandEncoder->endEncoding();
+    fn(mCommandBuffer.get(), viewport, mCurrentFrame);
 
     mCommandBuffer->endCommandBuffer();
 

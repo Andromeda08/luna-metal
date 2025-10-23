@@ -126,6 +126,7 @@ public:
     {
     public:
         Builder() = default;
+
         explicit Builder(const MTLPipelineParams& params) : mParams(params) {}
 
         Builder& addShaderSource(const std::string& shaderSourceCode)
@@ -231,12 +232,16 @@ struct MetalRHIParams
 
 class MetalRHI
 {
+    using RenderFrameBodyFn = std::function<
+        void(MTL4::CommandBuffer*, const MTL::Viewport&, uint64_t)>;
 public:
     explicit MetalRHI(const MetalRHIParams& params);
 
     static UPtr<MetalRHI> create(const MetalRHIParams& params);
 
     void renderFrame();
+
+    void renderFrame(const RenderFrameBodyFn& fn);
 
     [[nodiscard]] UPtr<MetalTexture> createTexture(const MetalTextureParams& params) const
     {
