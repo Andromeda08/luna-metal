@@ -1,18 +1,13 @@
-#include "MetalRHI/MetalRHI.hpp"
-#include "Window/Window.h"
+#include "App.hpp"
 
 int main()
 {
-    const auto window = std::make_unique<Window>(1280, 720);
-    const auto metalRHI = MetalRHI::create({
-        .pWindow = window.get(),
+    const auto app = App::create({
+        .name       = "Luna::Metal",
+        .windowSize = { 1280, 720 },
     });
 
-    while (!window->willClose())
-    {
-        glfwPollEvents();
-        metalRHI->renderFrame();
-    }
+    app->run();
 
     return 0;
 }

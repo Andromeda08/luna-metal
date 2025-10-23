@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-Window::Window(const uint32_t width, const uint32_t height): IWindow()
+Window::Window(const uint32_t width, const uint32_t height, const std::string& title): IWindow()
 {
     assert(glfwInit());
 
@@ -11,7 +11,7 @@ Window::Window(const uint32_t width, const uint32_t height): IWindow()
 
     GLFWmonitor* display = nullptr;
     mWindow = glfwCreateWindow(static_cast<int32_t>(width), static_cast<int32_t>(height),
-                               "Metal Test", display, nullptr);
+                               title.c_str(), display, nullptr);
 
     assert(mWindow);
 

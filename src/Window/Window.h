@@ -1,6 +1,7 @@
 #pragma once
 
 #define GLFW_INCLUDE_NONE
+#include <string>
 #include <GLFW/glfw3.h>
 
 #include "MetalRHI/IWindow.h"
@@ -8,7 +9,7 @@
 class Window final : public IWindow
 {
 public:
-    Window(uint32_t width, uint32_t height);
+    Window(uint32_t width, uint32_t height, const std::string& title);
 
     ~Window() override;
 

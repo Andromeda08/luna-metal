@@ -19,6 +19,8 @@ add_executable(LunaMetal
         src/Window/Window.h
         src/Window/Window.cpp
         src/Window/Window.mm
+        src/App.cpp
+        src/App.hpp
 )
 
 target_link_libraries(LunaMetal PUBLIC
