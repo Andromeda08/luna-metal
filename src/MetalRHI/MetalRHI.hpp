@@ -238,7 +238,14 @@ public:
 
     void renderFrame();
 
-    MTLPipeline::Builder buildPipeline() const
+    [[nodiscard]] UPtr<MetalTexture> createTexture(const MetalTextureParams& params) const
+    {
+        auto p = params;
+        p.pDevice = mDevice.get();
+        return MetalTexture::create(p);
+    }
+
+    [[nodiscard]] MTLPipeline::Builder buildPipeline() const
     {
         return MTLPipeline::Builder({
             .pDevice = mDevice,
