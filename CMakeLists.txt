@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.0)
-project(MetalExample CXX OBJCXX)
+project(LunaMetal CXX OBJCXX)
 
 enable_language(OBJCXX)
 
@@ -10,7 +10,7 @@ include(cmake/fetchMetalCpp.cmake)
 
 add_subdirectory(external/glfw)
 
-add_executable(MetalExample
+add_executable(LunaMetal
     src/main.cpp
         src/MetalRHI/metal_cpp_impl.cpp
         src/MetalRHI/MetalRHI.hpp
@@ -21,13 +21,13 @@ add_executable(MetalExample
         src/Window/Window.mm
 )
 
-target_link_libraries(MetalExample PUBLIC
+target_link_libraries(LunaMetal PUBLIC
     glfw
     "-framework Metal"
     "-framework Foundation"
     "-framework QuartzCore"
 )
-target_include_directories(MetalExample PUBLIC
+target_include_directories(LunaMetal PUBLIC
     ./src
     ${PROJECT_SOURCE_DIR}/external/glfw/include
     ${PROJECT_SOURCE_DIR}/external/metal-cpp/SingleHeader
